@@ -1,9 +1,16 @@
 ;; Copyright 2015, Yahoo Inc.
 ;; Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
-
+;;
 (ns setup.core
   (:import java.util.UUID)
   (:import java.io.FileNotFoundException)
+  (:import edu.purdue.cs.Constants)
+  (:import edu.purdue.cs.yahoobench.BenchReceiver)
+  (:import edu.purdue.cs.yahoobench.ResultViewer)
+
+  (:import edu.purdue.cs.yahoobench.EncryptInput)
+
+  
   (:require [clj-kafka.new.producer :refer :all]
             [redis.core :as redis]
             [clojure.java.io :as io]
@@ -12,14 +19,25 @@
             [clj-yaml.core :as yaml])
   (:gen-class))
 
+;; import yahoo streaming benchmark 
+
+
+
 (def num-campaigns 100)
 (def view-capacity-per-window 10)
 (def kafka-event-count  (* 10 1000000)) ; N millions
 (def time-divisor 10000)               ; 10 seconds
 
+
+; TODO 
 (defn make-ids [n]
   (for [n (range n)]
-    (.toString (java.util.UUID/randomUUID))))
+    ; (.toString (java.util.UUID/randomUUID))))
+    (BenchReceiver/enc_str (.toString (java.util.UUID/randomUUID)))))
+
+; (defn make-ids [n]
+;   (for [n (range n)]
+;     (.toString (java.util.UUID/randomUUID))))
 
 (defn write-ids [campaigns ads]
   (println "Writing ids to files.")
@@ -44,6 +62,7 @@
     (catch FileNotFoundException e
       (println "Failed to load ids from file."))))
 
+; run only with -s flag
 (defn write-to-redis [campaigns ads redis-host]
   ;; Hook up the redis DB
   (println "Writing initial data to Redis.")
@@ -58,6 +77,7 @@
               (println (str "{ \""ad "\": \"" campaign "\"}"))
               (redis/set ad campaign))))))))
 
+; run only with -s flag
 (defn write-to-kafka [ads kafka-hosts]
   ;; Put some crap in Kafka
   (println "Setting up kafka topic.")
@@ -128,11 +148,24 @@
                  (line-seq kafkas)))))
 
 (defn get-stats [redis-host]
+  ;(with-open [seen-file (clojure.java.io/writer "seen.txt")  
+  ; TODO seen_LOAD00_TIME00.txt 
   (with-open [seen-file (clojure.java.io/writer "seen.txt")
-              updated-file (clojure.java.io/writer "updated.txt")]
-    (letfn [(data-printer [[seen updated]]
+              updated-file (clojure.java.io/writer "updated.txt")
+              time_updated-file (clojure.java.io/writer "time_updated.txt")
+              time_window-file (clojure.java.io/writer "time_window.txt")]
+    ;(letfn [(data-printer [[seen updated]]
+    (letfn [(data-printer [[seen updated time_updated time_window]]
               (.write seen-file (str seen "\n"))
-              (.write updated-file (str updated "\n")))]
+              ; latency = last event emitted to kafka to campaign written to Redis 
+              ; window-time (redis) - time_updated
+              (.write updated-file (str updated "\n"))
+              (.write time_updated-file (str time_updated "\n"))
+              (.write time_window-file (str time_window "\n"))
+
+              ;(.write updated-file (str "latency =" updated "\n"))
+              (ResultViewer/getLatency updated))]
+
       (redis/with-server {:host redis-host}
         (doall
          (map data-printer
@@ -146,7 +179,11 @@
                              (let [window-key (redis/hget campaign window-time)
                                    seen (redis/hget window-key "seen_count")
                                    time_updated (redis/hget window-key "time_updated")]
-                               [seen (- (Long/parseLong time_updated) (Long/parseLong window-time))]))))))))))))
+                               ;[seen (- (Long/parseLong time_updated) (Long/parseLong window-time))]))))))))))))
+                               [seen (- (Long/parseLong time_updated) (Long/parseLong window-time)) (Long/parseLong time_updated) (Long/parseLong window-time)]))))))))))))
+;
+;
+
 
 (defn gen-ads [redis-host]
   (redis/with-server {:host redis-host}
@@ -160,7 +197,39 @@
           (redis/set ad campaign)))
       ads)))
 
+; TODO
+; TODO
+
+; enc flag
+
+(defn gen-ads-enc [redis-host]
+  (redis/with-server {:host redis-host}
+    (let [campaigns (redis/smembers "campaigns")
+          ads (into [] (make-ids (* num-campaigns 10))) ; TODO enc here make-enc-id
+          campaigns-ads (map vector campaigns (partition 10 ads))]
+      (if (< (count campaigns) num-campaigns)
+        (throw (RuntimeException. "No Campaigns found. Please run with -n first.")))
+      (doseq [[campaign campaign-ads] campaigns-ads]
+        (doseq [ad campaign-ads]
+          (redis/set ad campaign))) ; enc here and ...
+          ; (.println java.lang.System/out "===================================")
+          ; (.println java.lang.System/out "INSIDE core.clj/gen-ads : enc redis")
+          ; (redis/set (BenchReceiver/enc_str ad) (BenchReceiver/enc_str campaign)
+          ; (.println java.lang.System/out "===================================")
+          ; ))) ; enc here and ...
+
+      ads)))
+
+
+; Note
+;
+; check redis data
+
 (defn make-kafka-event-at [time with-skew? ads user-ids page-ids]
+  
+  ; (.println java.lang.System/out "INSIDE core.clj/make-kafka-event-at ** ** **")
+  ; (.println java.lang.System/out "  ***   new regular message sent to KAFKA **")
+
   (let [ad-types ["banner", "modal", "sponsored-search", "mail", "mobile"]
         event-types ["view", "click", "purchase"]
         skew (if with-skew?
@@ -172,6 +241,7 @@
                        0))
                   0)
         time (+ time skew late-by)]
+ 
     (str "{\"user_id\": \"" (rand-nth user-ids)
          "\", \"page_id\": \"" (rand-nth page-ids)
          "\", \"ad_id\": \"" (rand-nth ads)
@@ -180,14 +250,91 @@
          "\", \"event_time\": \"" (str time)
          "\", \"ip_address\": \"1.2.3.4\"}")))
 
+
+(defn make-kafka-event-at-encrypt [time with-skew? ads user-ids page-ids]
+
+;; HERE FLAG #here #flag
+;;  to call methods
+;;      (. (Date.) getTime)
+;;      (.getTime (Date.))
+;;  to call java static method
+;;      (System/currentTimeMillis)
+
+  ;; examples
+  ;;(javax.swing.JOptionPane/showMessageDialog nil "new event") ;;
+  ;;(javax.swing.JOptionPane/showMessageDialog nil Constants/CHARSET_NAME) ;;
+  ;;(javax.swing.JOptionPane/showMessageDialog nil EncryptInput/TEST_OUTPUT ) ;;
+  ;;(javax.swing.JOptionPane/showMessageDialog nil (edu.purdue.cs.yahoobench.EncryptInput/toUpper "lower case") ) ;;
+  ;;(javax.swing.JOptionPane/showMessageDialog nil (EncryptInput/toUpper "lower case") ) ;;
+  
+  ; (.println java.lang.System/out "INSIDE core.clj/make-kafka-event-at-encrypt **")
+  ; (.println java.lang.System/out "  ***   new encrypted message sent to KAFKA **")
+    
+  (let [ad-types ["banner", "modal", "sponsored-search", "mail", "mobile"]
+        event-types ["view", "click", "purchase"]
+        skew (if with-skew?
+               (- 50 (rand-int 100))
+               0)
+        late-by (if with-skew?
+                  (- (if (= 0 (rand-int 100000))
+                       (rand-int 60000)
+                       0))
+                  0)
+        time (+ time skew late-by)]
+        ;;(println "new event emitted") ;;
+    
+
+    ;; write to data/kafka_event.txt
+    ; (comment    
+    ; (with-open [w (clojure.java.io/writer  "kafka_events.txt" :append true)] 
+    ;   (.write w     
+    ;     (str "{\"user_id\": \"" (rand-nth user-ids)
+    ;      "\", \"page_id\": \"" (rand-nth page-ids)
+    ;      "\", \"ad_id\": \"" (rand-nth ads)
+    ;      "\", \"ad_type\": \"" (rand-nth ad-types)
+    ;      "\", \"event_type\": \"" (rand-nth event-types)
+    ;      "\", \"event_time\": \"" (str time)
+    ;      "\", \"ip_address\": \"1.2.3.4\"}" "\n" )))
+    ; ;; TODO add counter variable c and increment
+    ; (.println java.lang.System/out "new message sent to KAFKA") 
+    ; );; comment
+    
+    ;; send the random messages to java class EncryptInput
+    ; (EncryptInput/encryptInput  (rand-nth user-ids) (rand-nth page-ids)
+    ;                 (rand-nth ads) (rand-nth ad-types)  (rand-nth event-types)
+    ;                  (str time)
+    ; ) 
+
+    (BenchReceiver/connect 
+      (str "{\"user_id\": \"" (rand-nth user-ids)
+           "\", \"page_id\": \"" (rand-nth page-ids)
+           "\", \"ad_id\": \"" (rand-nth ads)
+           "\", \"ad_type\": \"" (rand-nth ad-types)
+           "\", \"event_type\": \"" (rand-nth event-types)
+           "\", \"event_time\": \"" (str time)
+           "\", \"ip_address\": \"1.2.3.4\"}") 
+      ) 
+    ))
+
+
+
+
 (defn run [throughput with-skew? kafka-hosts redis-host]
   (println "Running, emitting" throughput "tuples per second.")
-  (let [ads (gen-ads redis-host)
+
+  (println "** ** ** ** ******* ** ** ** ** **")
+  (println "** ** ** ** INSIDE RUN ** ** ** **")
+  (println "** ** ** ** ******* ** ** ** ** **")
+  
+  ; (let [ads (gen-ads redis-host)
+  (let [ads (gen-ads-enc redis-host)
         page-ids (make-ids 100)
         user-ids (make-ids 100)
         start-time-ns (* 1000000 (System/currentTimeMillis))
-        period-ns (long (/ 1000000000 throughput))
+        period-ns (long (/ 1000000000 throughput)) ;;throughput number of tuples per second to emit
         times (map #(+ (* period-ns %) start-time-ns) (range))]
+        ;;
+
     (with-open [p (producer {"bootstrap.servers" kafka-hosts}
                             (byte-array-serializer)
                             (byte-array-serializer))]
@@ -199,8 +346,27 @@
             (future
               (if (> cur (+ t 100))
                 (println "Falling behind by:" (- cur t) "ms"))))
+
+; TODO check flag or normal / encrypt
+; make-kafka-event-at-encrypt
+; (println "** ** ** ** ******* ** ** ** ** **")
+; (println "** ** ** ** INSIDE RUNC * ** ** **")
+; (println "** ** ** ** ******* ** ** ** ** **")
+
+;; TODO TRACK TIME         
+          ;
+          ;(BenchReceiver/check_time (str) t)  
+
+;; enc flag
           (send p (record "ad-events"
                           (.getBytes (make-kafka-event-at t with-skew? ads user-ids page-ids)))))))))
+                          ; (.getBytes (make-kafka-event-at-encrypt t with-skew? ads user-ids page-ids)))))))))
+; 
+; TODO FALG
+; clojure flag
+
+     
+          
 
 (defn do-new-setup [redis-host]
   ;; Hook up the redis DB
@@ -280,6 +446,8 @@
       (:setup options)                        (do-setup conf)
       (:check options)                        (check-correct redis-host)
       (:new options)                          (do-new-setup redis-host)
-      (:run options)                          (run (:throughput options) (:with-skew options) kafka-hosts redis-host)
+      (:run options)                          (run (:throughput options) (:with-skew options) kafka-hosts redis-host) 
+      ;(:runc options)                         (runc (:throughput options) (:with-skew options) kafka-hosts redis-host) 
       (:get-stats options)                    (get-stats redis-host)
-      :else                                   (println summary))))
+      :else                                   (println summary) )))
+      ;:else                                   (BenchReceiver/exportHashMap "0") )))
