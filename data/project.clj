@@ -7,9 +7,10 @@
                  [org.clojars.tavisrudd/redis-clojure "1.3.1"]
                  [clj-kafka "0.3.2"]
                  [clj-json "0.5.3"]
-                 [clj-yaml "0.4.0"]]
+                 [clj-yaml "0.4.0"]
+                 [edu.purdue.cs/phestorm "1.0-SNAPSHOT"]]
   :main setup.core
-  :jvm-opts ["-Xmx8g" "-server"]
+  :jvm-opts ["-Xmx4g" "-server"]
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
 
