@@ -229,7 +229,12 @@ run() {
     cd data
     start_if_needed leiningen.core.main "Load Generation" 1 $LEIN run -r -t $LOAD --configPath ../$CONF_FILE
     cd ..
-  elif [ "STOP_LOAD" = "$OPERATION" ];
+   elif [ "START_ENCLOAD" = "$OPERATION" ];
+  then
+    cd data
+    start_if_needed leiningen.core.main "Load Generation" 1 $LEIN run -r -t  $LOAD --configPath ../$CONF_FILE --encrypt 
+    cd ..
+ elif [ "STOP_LOAD" = "$OPERATION" ];
   then
     stop_if_needed leiningen.core.main "Load Generation"
     cd data
@@ -299,6 +304,21 @@ run() {
     run "STOP_KAFKA"
     run "STOP_REDIS"
     run "STOP_ZK"
+  elif [ "ENCSTORM_TEST" = "$OPERATION" ];
+  then
+    run "START_ZK"
+    run "START_REDIS"
+    run "START_KAFKA"
+    run "START_STORM"
+    run "START_STORM_TOPOLOGY"
+    run "START_ENCLOAD"
+    sleep $TEST_TIME
+    run "STOP_LOAD"
+    run "STOP_STORM_TOPOLOGY"
+    run "STOP_STORM"
+    run "STOP_KAFKA"
+    run "STOP_REDIS"
+    run "STOP_ZK"
   elif [ "FLINK_TEST" = "$OPERATION" ];
   then
     run "START_ZK"
@@ -345,10 +365,10 @@ run() {
   elif [ "STOP_ALL" = "$OPERATION" ];
   then
     run "STOP_LOAD"
-    run "STOP_SPARK_PROCESSING"
-    run "STOP_SPARK"
-    run "STOP_FLINK_PROCESSING"
-    run "STOP_FLINK"
+#    run "STOP_SPARK_PROCESSING"
+#    run "STOP_SPARK"
+#    run "STOP_FLINK_PROCESSING"
+#    run "STOP_FLINK"
     run "STOP_STORM_TOPOLOGY"
     run "STOP_STORM"
     run "STOP_KAFKA"

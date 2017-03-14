@@ -213,7 +213,7 @@
         (doseq [ad campaign-ads]
           (redis/set ad campaign))) ; enc here and ...
           ; (.println java.lang.System/out "===================================")
-          ; (.println java.lang.System/out "INSIDE core.clj/gen-ads : enc redis")
+           (.println java.lang.System/out "INSIDE core.clj/gen-ads : enc redis")
           ; (redis/set (BenchReceiver/enc_str ad) (BenchReceiver/enc_str campaign)
           ; (.println java.lang.System/out "===================================")
           ; ))) ; enc here and ...
@@ -319,15 +319,15 @@
 
 
 
-(defn run [throughput with-skew? kafka-hosts redis-host]
+(defn run [throughput with-skew? kafka-hosts redis-host encrypted]
   (println "Running, emitting" throughput "tuples per second.")
 
   (println "** ** ** ** ******* ** ** ** ** **")
-  (println "** ** ** ** INSIDE RUN ** ** ** **")
+  (println "** ** ** ** INSIDE RUN ["encrypted "]** ** ** **")
   (println "** ** ** ** ******* ** ** ** ** **")
   
   ; (let [ads (gen-ads redis-host)
-  (let [ads (gen-ads-enc redis-host)
+  (let [ads (if encrypted (gen-ads-enc redis-host) (gen-ads redis-host))
         page-ids (make-ids 100)
         user-ids (make-ids 100)
         start-time-ns (* 1000000 (System/currentTimeMillis))
@@ -347,23 +347,8 @@
               (if (> cur (+ t 100))
                 (println "Falling behind by:" (- cur t) "ms"))))
 
-; TODO check flag or normal / encrypt
-; make-kafka-event-at-encrypt
-; (println "** ** ** ** ******* ** ** ** ** **")
-; (println "** ** ** ** INSIDE RUNC * ** ** **")
-; (println "** ** ** ** ******* ** ** ** ** **")
-
-;; TODO TRACK TIME         
-          ;
-          ;(BenchReceiver/check_time (str) t)  
-
-;; enc flag
           (send p (record "ad-events"
                           (.getBytes (make-kafka-event-at t with-skew? ads user-ids page-ids)))))))))
-                          ; (.getBytes (make-kafka-event-at-encrypt t with-skew? ads user-ids page-ids)))))))))
-; 
-; TODO FALG
-; clojure flag
 
      
           
@@ -431,6 +416,9 @@
     :parse-fn #(Long/parseLong %)]
    ["-w" "--with-skew" "Add minor skew and late tuples into the mix."]
    ["-g" "--get-stats" "Read through redis and collect stats on end-to-end latency and so forth for the real-time simulation."]
+   ["-e" "--encrypt" "Use encrypted random ids."
+    :flag true
+    :default false]
    ["-a" "--configPath PATH" "Path to config yaml file"
     :default "./benchmarkConf.yaml"
     :parse-fn #(String/valueOf %)]])
@@ -446,7 +434,7 @@
       (:setup options)                        (do-setup conf)
       (:check options)                        (check-correct redis-host)
       (:new options)                          (do-new-setup redis-host)
-      (:run options)                          (run (:throughput options) (:with-skew options) kafka-hosts redis-host) 
+      (:run options)                          (run (:throughput options) (:with-skew options) kafka-hosts redis-host (:encrypt options)) 
       ;(:runc options)                         (runc (:throughput options) (:with-skew options) kafka-hosts redis-host) 
       (:get-stats options)                    (get-stats redis-host)
       :else                                   (println summary) )))
