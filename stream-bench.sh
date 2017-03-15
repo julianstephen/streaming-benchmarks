@@ -291,10 +291,10 @@ run() {
        fi
   elif [ "STORM_TEST" = "$OPERATION" ];
   then
-    run "START_ZK"
+#    run "START_ZK"
     run "START_REDIS"
     run "START_KAFKA"
-    run "START_STORM"
+#    run "START_STORM"
     run "START_STORM_TOPOLOGY"
     run "START_LOAD"
     sleep $TEST_TIME
@@ -306,10 +306,10 @@ run() {
     run "STOP_ZK"
   elif [ "ENCSTORM_TEST" = "$OPERATION" ];
   then
-    run "START_ZK"
+#    run "START_ZK"
     run "START_REDIS"
     run "START_KAFKA"
-    run "START_STORM"
+#    run "START_STORM"
     run "START_STORM_TOPOLOGY"
     run "START_ENCLOAD"
     sleep $TEST_TIME
