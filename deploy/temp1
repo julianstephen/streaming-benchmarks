@@ -1,0 +1,100 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+########### These MUST be filled in for a storm configuration
+storm.zookeeper.servers:
+        - "ec2-52-207-110-246.compute-1.amazonaws.com"
+storm.local.dir:
+     "/home/ec2-user/localstormdata"
+
+nimbus.seeds: ["ec2-52-207-110-246.compute-1.amazonaws.com"]
+supervisor.slots.ports:
+    - 6700
+java.library.path: "/usr/local/lib:/home/ec2-user/gmp-java:/opt/local/lib:/usr/lib"
+
+#nimbus.task.launch.secs: 240
+
+#supervisor.scheduler.meta:
+#        name: "public"
+ui.port: 8772
+#storm.scheduler: "edu.purdue.cs.PartitionScheduler"
+
+#
+#
+# ##### These may optionally be filled in:
+#
+## List of custom serializations
+# topology.kryo.register:
+#     - org.mycompany.MyType
+#     - org.mycompany.MyType2: org.mycompany.MyType2Serializer
+#
+## List of custom kryo decorators
+# topology.kryo.decorators:
+#     - org.mycompany.MyDecorator
+#
+## Locations of the drpc servers
+# drpc.servers:
+#     - "server1"
+#     - "server2"
+
+topology.kryo.register:
+  - edu.purdue.cs.lrb.LRTuple: edu.purdue.cs.lrb.serializer.LRTupleSerializer
+  - edu.purdue.cs.lrb.EncLRTuple: edu.purdue.cs.lrb.serializer.EncLRTupleSerializer
+  - edu.purdue.cs.lrb.TSWindowElem
+  - edu.purdue.cs.lrb.VehicleEntry
+  - edu.purdue.cs.lrb.SpeedEntry
+  - edu.purdue.cs.type.DET
+  - edu.purdue.cs.type.Additive
+  - edu.purdue.cs.type.OPE
+  - edu.purdue.cs.type.NullField
+  - edu.purdue.cs.lrb.EncTSWindowElem
+  - edu.purdue.cs.lrb.EncVehicleEntry
+  - edu.purdue.cs.lrb.EncSpeedEntry
+  - edu.purdue.cs.lrb.EncAvgSpeedEntry
+  - edu.purdue.cs.hb.TransferDTO
+#  - java.util.ArrayList
+
+#worker.childopts: "-Xmx5000m -XX:+PrintGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:/home/ec2-user/storm-0.9.2/logs/gc-worker-%ID%.log -Djava.net.preferIPv4Stack=true"
+#worker.childopts: "-Xmx2048m -Djava.net.preferIPv4Stack=true"
+#worker.childopts: "-Xmx5000m -XX:+PrintGC -Djava.net.preferIPv4Stack=true"
+
+#Large nodes
+#worker.childopts: "-Xmx2048m  -Xms2048m -XX:+PrintGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:/home/ec2-user/storm-0.9.2/logs/gc-worker-%ID%.log -Djava.net.preferIPv4Stack=true"
+#nimbus.childopts: "-Xmx1024m"
+#ui.childopts: "-Xmx768m"
+
+#Medium nodes
+#worker.childopts: "-Xmx500m -XX:+PrintGC -Djava.net.preferIPv4Stack=true"
+#supervisor.childopts: "-Xmx256m"
+#nimbus.childopts: "-Xmx256m"
+#ui.childopts: "-Xmx256m"
+
+#storm.messaging.transport: "backtype.storm.messaging.netty.Context"
+#storm.messaging.netty.server_worker_threads: 1
+#storm.messaging.netty.client_worker_threads: 1
+#storm.messaging.netty.buffer_size: 5242880
+#storm.messaging.netty.max_retries: 100
+#storm.messaging.netty.max_wait_ms: 1000
+#storm.messaging.netty.min_wait_ms: 100
+
+## Metrics Consumers
+# topology.metrics.consumer.register:
+#   - class: "backtype.storm.metric.LoggingMetricsConsumer"
+#     parallelism.hint: 1
+#   - class: "org.mycompany.MyMetricsConsumer"
+#     parallelism.hint: 1
+#     argument:
+##       - endpoint: "metrics-collector.mycompany.org"
