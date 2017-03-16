@@ -1,5 +1,6 @@
 #!/bin/bash
-
+./stopstorm.sh
+./cleanstorm.sh
 ./sendconfigstoslaves.sh
 
 source env.sh
