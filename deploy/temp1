@@ -16,11 +16,11 @@
 
 ########### These MUST be filled in for a storm configuration
 storm.zookeeper.servers:
-        - "ec2-52-207-110-246.compute-1.amazonaws.com"
+        - "ec2-34-207-54-244.compute-1.amazonaws.com"
 storm.local.dir:
      "/home/ec2-user/localstormdata"
-
-nimbus.seeds: ["ec2-52-207-110-246.compute-1.amazonaws.com"]
+nimbus.host: "ec2-34-207-54-244.compute-1.amazonaws.com"
+#nimbus.seeds: ["ec2-34-207-54-244.compute-1.amazonaws.com"]
 supervisor.slots.ports:
     - 6700
 java.library.path: "/usr/local/lib:/home/ec2-user/gmp-java:/opt/local/lib:/usr/lib"

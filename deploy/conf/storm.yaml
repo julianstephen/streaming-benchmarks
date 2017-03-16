@@ -19,8 +19,8 @@ storm.zookeeper.servers:
         - "replaceme"
 storm.local.dir:
      "/home/ec2-user/localstormdata"
-
-nimbus.seeds: ["replaceme"]
+nimbus.host: "replaceme"
+#nimbus.seeds: ["replaceme"]
 supervisor.slots.ports:
     - 6700
 java.library.path: "/usr/local/lib:/home/ec2-user/gmp-java:/opt/local/lib:/usr/lib"

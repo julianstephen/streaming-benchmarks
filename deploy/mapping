@@ -1,7 +1,4 @@
 Master
-ec2-52-207-110-246.compute-1.amazonaws.com,ip-172-31-24-132.ec2.internal
+ec2-34-207-54-244.compute-1.amazonaws.com,ip-172-31-24-132.ec2.internal
 Workers
-ec2-54-204-247-15.compute-1.amazonaws.com,ip-172-31-21-254.ec2.internal
-ec2-54-211-245-253.compute-1.amazonaws.com,ip-172-31-24-204.ec2.internal
-ec2-54-174-140-206.compute-1.amazonaws.com,ip-172-31-17-243.ec2.internal
-ec2-52-207-15-185.compute-1.amazonaws.com,ip-172-31-23-27.ec2.internal
+ec2-54-85-17-55.compute-1.amazonaws.com,ip-172-31-23-27.ec2.internal
