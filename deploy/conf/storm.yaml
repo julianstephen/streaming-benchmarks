@@ -50,26 +50,13 @@ ui.port: 8772
 #     - "server1"
 #     - "server2"
 
-topology.kryo.register:
-  - edu.purdue.cs.lrb.LRTuple: edu.purdue.cs.lrb.serializer.LRTupleSerializer
-  - edu.purdue.cs.lrb.EncLRTuple: edu.purdue.cs.lrb.serializer.EncLRTupleSerializer
-  - edu.purdue.cs.lrb.TSWindowElem
-  - edu.purdue.cs.lrb.VehicleEntry
-  - edu.purdue.cs.lrb.SpeedEntry
-  - edu.purdue.cs.type.DET
-  - edu.purdue.cs.type.Additive
-  - edu.purdue.cs.type.OPE
-  - edu.purdue.cs.type.NullField
-  - edu.purdue.cs.lrb.EncTSWindowElem
-  - edu.purdue.cs.lrb.EncVehicleEntry
-  - edu.purdue.cs.lrb.EncSpeedEntry
-  - edu.purdue.cs.lrb.EncAvgSpeedEntry
-  - edu.purdue.cs.hb.TransferDTO
 #  - java.util.ArrayList
 
 #worker.childopts: "-Xmx5000m -XX:+PrintGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:/home/ec2-user/storm-0.9.2/logs/gc-worker-%ID%.log -Djava.net.preferIPv4Stack=true"
 #worker.childopts: "-Xmx2048m -Djava.net.preferIPv4Stack=true"
-#worker.childopts: "-Xmx5000m -XX:+PrintGC -Djava.net.preferIPv4Stack=true"
+nimbus.childopts: "-Xmx2000m -Djava.net.preferIPv4Stack=true"
+worker.childopts: "-Xmx5000m -Djava.net.preferIPv4Stack=true"
+supervisor.childopts: "-Xmx2000m -Djava.net.preferIPv4Stack=true"
 
 #Large nodes
 #worker.childopts: "-Xmx2048m  -Xms2048m -XX:+PrintGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:/home/ec2-user/storm-0.9.2/logs/gc-worker-%ID%.log -Djava.net.preferIPv4Stack=true"

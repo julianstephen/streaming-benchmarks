@@ -2,14 +2,14 @@
 # Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
 
 kafka.brokers:
-    - "localhost"
+    - "ec2-54-159-77-57.compute-1.amazonaws.com"
 
 zookeeper.servers:
-    - "localhost"
+    - "ec2-54-159-77-57.compute-1.amazonaws.com"
 
 kafka.port: 9092
 zookeeper.port: 2181
-redis.host: "localhost"
+redis.host: "ec2-54-159-77-57.compute-1.amazonaws.com"
 kafka.topic: "ad-events"
 kafka.partitions: 1
 
@@ -17,8 +17,8 @@ process.hosts: 1
 process.cores: 4
 
 #STORM Specific
-storm.workers: 2
-storm.ackers: 2
+storm.workers: 4
+storm.ackers: 4
 
 #Spark Specific
 spark.batchtime: 2000
