@@ -10,7 +10,7 @@ LEIN=${LEIN:-lein}
 MVN=${MVN:-mvn}
 GIT=${GIT:-git}
 MAKE=${MAKE:-make}
-
+YAHOOBENCH=/home/ec2-user/github/streaming-benchmarks
 KAFKA_VERSION=${KAFKA_VERSION:-"0.8.2.1"}
 REDIS_VERSION=${REDIS_VERSION:-"3.0.5"}
 SCALA_BIN_VERSION=${SCALA_BIN_VERSION:-"2.10"}
@@ -38,6 +38,8 @@ PARTITIONS=${PARTITIONS:-1}
 LOAD=${LOAD:-1000}
 CONF_FILE=./conf/localConf.yaml
 TEST_TIME=${TEST_TIME:-240}
+
+now=$(date +"%Y-%m-%dT%H:%M:%S")
 
 pid_match() {
    local VAL=`ps -aef | grep "$1" | grep -v grep | awk '{print $2}'`
@@ -242,12 +244,14 @@ run() {
     cd ..
   elif [ "START_STORM_TOPOLOGY" = "$OPERATION" ];
   then
+    date +%Y-%m-%dT%H:%M:%S > data/starttime
     "$STORM_DIR/bin/storm" jar ./storm-benchmarks/target/storm-benchmarks-0.1.0.jar storm.benchmark.AdvertisingTopology test-topo -conf $CONF_FILE
     sleep 15
   elif [ "STOP_STORM_TOPOLOGY" = "$OPERATION" ];
   then
     "$STORM_DIR/bin/storm" kill -w 0 test-topo || true
     sleep 10
+    date +%Y-%m-%dT%H:%M:%S > data/stoptime
   elif [ "START_SPARK_PROCESSING" = "$OPERATION" ];
   then
     "$SPARK_DIR/bin/spark-submit" --master spark://localhost:7077 --class spark.benchmark.KafkaRedisAdvertisingStream ./spark-benchmarks/target/spark-benchmarks-0.1.0.jar "$CONF_FILE" &
@@ -304,6 +308,12 @@ run() {
     run "STOP_KAFKA"
     run "STOP_REDIS"
     run "STOP_ZK"
+    mkdir -p testruns/stormtest-$now/stats
+    cp data/*.txt testruns/stormtest-$now/
+    cp data/starttime testruns/stormtest-$now/
+    cp data/stoptime testruns/stormtest-$now/
+    cd testruns/stormtest-$now/stats
+    ${YAHOOBENCH}/deploy/getcloudmetrics.sh $(<../starttime) $(<../stoptime)
   elif [ "ENCSTORM_TEST" = "$OPERATION" ];
   then
 #    run "START_ZK"
@@ -319,6 +329,12 @@ run() {
     run "STOP_KAFKA"
     run "STOP_REDIS"
     run "STOP_ZK"
+    mkdir -p testruns/encstormtest-$now/stats
+    cp data/*.txt testruns/encstormtest-$now/
+    cp data/starttime testruns/encstormtest-$now/
+    cp data/stoptime testruns/encstormtest-$now/
+    cd testruns/encstormtest-$now/stats
+    ${YAHOOBENCH}/deploy/getcloudmetrics.sh $(<../starttime) $(<../stoptime)
   elif [ "FLINK_TEST" = "$OPERATION" ];
   then
     run "START_ZK"
