@@ -10,7 +10,7 @@ LEIN=${LEIN:-lein}
 MVN=${MVN:-mvn}
 GIT=${GIT:-git}
 MAKE=${MAKE:-make}
-YAHOOBENCH=/home/ec2-user/github/streaming-benchmarks
+#YAHOOBENCH=/home/ec2-user/github/streaming-benchmarks
 KAFKA_VERSION=${KAFKA_VERSION:-"0.8.2.1"}
 REDIS_VERSION=${REDIS_VERSION:-"3.0.5"}
 SCALA_BIN_VERSION=${SCALA_BIN_VERSION:-"2.10"}
@@ -30,7 +30,7 @@ APEX_DIR="apex-$APEX_VERSION"
 #Get one of the closet apache mirrors
 APACHE_MIRROR=$(curl 'https://www.apache.org/dyn/closer.cgi' |   grep -o '<strong>[^<]*</strong>' |   sed 's/<[^>]*>//g' |   head -1)
 
-ZK_HOST="localhost"
+ZK_HOST="10.104.141.70"
 ZK_PORT="2181"
 ZK_CONNECTIONS="$ZK_HOST:$ZK_PORT"
 TOPIC=${TOPIC:-"ad-events"}
@@ -313,7 +313,7 @@ run() {
     cp data/starttime testruns/stormtest-$now/
     cp data/stoptime testruns/stormtest-$now/
     cd testruns/stormtest-$now/stats
-    ${YAHOOBENCH}/deploy/getcloudmetrics.sh $(<../starttime) $(<../stoptime)
+#    ${YAHOOBENCH}/deploy/getcloudmetrics.sh $(<../starttime) $(<../stoptime)
   elif [ "ENCSTORM_TEST" = "$OPERATION" ];
   then
 #    run "START_ZK"
@@ -325,16 +325,16 @@ run() {
     sleep $TEST_TIME
     run "STOP_LOAD"
     run "STOP_STORM_TOPOLOGY"
-    run "STOP_STORM"
+#    run "STOP_STORM"
     run "STOP_KAFKA"
     run "STOP_REDIS"
-    run "STOP_ZK"
+#    run "STOP_ZK"
     mkdir -p testruns/encstormtest-$now/stats
     cp data/*.txt testruns/encstormtest-$now/
     cp data/starttime testruns/encstormtest-$now/
     cp data/stoptime testruns/encstormtest-$now/
     cd testruns/encstormtest-$now/stats
-    ${YAHOOBENCH}/deploy/getcloudmetrics.sh $(<../starttime) $(<../stoptime)
+#    ${YAHOOBENCH}/deploy/getcloudmetrics.sh $(<../starttime) $(<../stoptime)
   elif [ "FLINK_TEST" = "$OPERATION" ];
   then
     run "START_ZK"

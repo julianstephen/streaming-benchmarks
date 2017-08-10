@@ -2,14 +2,14 @@
 # Licensed under the terms of the Apache License 2.0. Please see LICENSE file in the project root for terms.
 
 kafka.brokers:
-    - "ec2-54-159-77-57.compute-1.amazonaws.com"
+    - "10.110.190.255"
 
 zookeeper.servers:
-    - "ec2-54-159-77-57.compute-1.amazonaws.com"
+    - "10.104.141.70"
 
 kafka.port: 9092
 zookeeper.port: 2181
-redis.host: "ec2-54-159-77-57.compute-1.amazonaws.com"
+redis.host: "localhost"
 kafka.topic: "ad-events"
 kafka.partitions: 1
 
